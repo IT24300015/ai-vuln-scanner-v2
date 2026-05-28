@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.env
+venv/
+*.egg-info/
+node_modules/
+dist/
+build/
+.next/
+*.log
+.env.local
+.env.production
+*.pem
+my-tokens.txt
+.vscode/
+.DS_Store
