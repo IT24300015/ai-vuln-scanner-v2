@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Shield, Brain, ArrowLeft, ExternalLink, Globe, Code, Clock, Info, CheckCircle } from 'lucide-react';
 import { getScan } from '../services/api';
-import { 
-  Shield, Brain, LayoutDashboard, Calendar, Globe, 
-  AlertTriangle, ChevronRight, CheckCircle2, Loader2, Info, Search
-} from 'lucide-react';
 
 const ScanResults = () => {
   const { id } = useParams();
@@ -16,162 +13,146 @@ const ScanResults = () => {
       try {
         const data = await getScan(id);
         setScan(data);
-      } catch (error) {
-        console.error('Failed to fetch scan:', error);
+      } catch {
+        console.error('Failed to fetch scan results');
       } finally {
         setLoading(false);
       }
     };
-    fetchScan();
+    fetchScan(id);
   }, [id]);
 
-  if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] gap-4">
-      <Loader2 className="animate-spin text-primary w-12 h-12" />
-      <p className="text-gray-500">Analyzing scan data...</p>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-  if (!scan) return <div className="p-12 text-center">Scan not found</div>;
+  if (!scan) return <div>Scan not found</div>;
+
+  const hasCritical = scan.vulnerabilities?.some(v => v.severity === 'critical');
+  const hasHigh = scan.vulnerabilities?.some(v => v.severity === 'high');
+  const hasMedium = scan.vulnerabilities?.some(v => v.severity === 'medium');
+  const hasLow = scan.vulnerabilities?.some(v => v.severity === 'low');
 
   const getRiskLevel = () => {
-    const severities = scan.vulnerabilities?.map(v => v.severity) || [];
-    if (severities.includes('critical')) return { label: 'CRITICAL RISK', color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30' };
-    if (severities.includes('high')) return { label: 'HIGH RISK', color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/30' };
-    if (severities.includes('medium')) return { label: 'MEDIUM RISK', color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' };
-    if (severities.includes('low')) return { label: 'LOW RISK', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30' };
-    return { label: 'SECURE', color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/30' };
+    if (hasCritical) return { label: 'CRITICAL RISK', color: 'bg-red-500', text: 'text-red-500' };
+    if (hasHigh) return { label: 'HIGH RISK', color: 'bg-orange-500', text: 'text-orange-500' };
+    if (hasMedium) return { label: 'MEDIUM RISK', color: 'bg-yellow-500', text: 'text-yellow-500' };
+    if (hasLow) return { label: 'LOW RISK', color: 'bg-blue-500', text: 'text-blue-500' };
+    return { label: 'SECURE', color: 'bg-green-500', text: 'text-green-500' };
   };
 
   const risk = getRiskLevel();
-  const groupedVulns = scan.vulnerabilities?.reduce((acc, v) => {
-    acc[v.severity] = [...(acc[v.severity] || []), v];
-    return acc;
-  }, {}) || {};
 
   return (
-    <div className="max-w-[1400px] mx-auto p-8 pb-20">
+    <div className="p-6 sm:p-12 max-w-7xl mx-auto space-y-10 animate-fade-in pb-20">
       {/* Header Card */}
-      <div className="bg-card border border-border rounded-3xl p-8 mb-10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -mr-32 -mt-32"></div>
+      <div className="glass p-8 rounded-3xl border-white/5 relative overflow-hidden">
+        <div className={`absolute top-0 right-0 w-64 h-64 ${risk.color} opacity-5 blur-[100px] -mr-32 -mt-32`}></div>
         
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 relative z-10">
+        <div className="flex flex-col lg:flex-row gap-8 justify-between">
           <div className="space-y-4">
+            <Link to="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm font-medium">
+              <ArrowLeft className="w-4 h-4" /> Return to Dashboard
+            </Link>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/5 rounded-lg border border-border text-gray-400">
-                <Globe size={20} />
-              </div>
-              <h1 className="text-2xl font-mono font-bold text-gray-100">{scan.target_url}</h1>
+              <Globe className="w-6 h-6 text-primary" />
+              <h1 className="text-2xl  font-bold break-all">{scan.target_url}</h1>
             </div>
-            <div className="flex flex-wrap gap-6 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <Calendar size={16} />
-                {new Date(scan.created_at).toLocaleString()}
+            <div className="flex flex-wrap gap-6 text-sm">
+              <div className="flex items-center gap-2 text-gray-400">
+                <Clock className="w-4 h-4" /> {new Date(scan.created_at).toLocaleString()}
               </div>
-              <div className="flex items-center gap-2">
-                <Shield size={16} />
-                ID: {String(scan.id).substring(0, 8)}
+              <div className="flex items-center gap-2 text-gray-400">
+                <Shield className="w-4 h-4" /> {scan.vulnerabilities?.length || 0} Risk Vectors Synthesized
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-8">
-            <div className="text-right">
-              <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${risk.color}`}>Overall Status</div>
-              <div className={`px-4 py-2 rounded-xl border-2 font-black text-lg ${risk.bg} ${risk.color} ${risk.border} shadow-[0_0_20px_rgba(0,0,0,0.3)]`}>
-                {risk.label}
-              </div>
+          <div className="space-y-4 min-w-[300px]">
+            <div className={`p-6 rounded-2xl border ${risk.color}/20 bg-${risk.color}/10 text-center`}>
+              <div className={`text-4xl font-black mb-1 ${risk.text}`}>{risk.label}</div>
+              <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Strategic Threat Status</div>
             </div>
-            
-            <div className="text-right border-l border-border pl-8">
-              <div className="text-[10px] font-black uppercase tracking-widest mb-1 text-gray-500">Security Threats</div>
-              <div className="text-3xl font-black text-white">{scan.vulnerabilities?.length || 0}</div>
+            <div className="flex gap-3">
+              <Link to={`/scan/${id}/report`} className="flex-1 bg-primary text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(0,255,136,0.5)] transition-all">
+                <Brain className="w-4 h-4" /> Synthesize Intelligence
+              </Link>
+              <button className="px-4 py-3 border border-border hover:bg-white/5 rounded-xl transition-colors">
+                <ExternalLink className="w-5 h-5" />
+              </button>
             </div>
           </div>
-        </div>
-
-        <div className="mt-10 pt-8 border-t border-border flex flex-wrap gap-4">
-          <Link to={`/scan/${scan.id}/report`} className="px-6 py-3 bg-primary text-black font-bold rounded-xl flex items-center gap-2 hover:scale-105 transition-all shadow-[0_0_20px_rgba(0,255,136,0.2)]">
-            <Brain size={18} />
-            View AI Report
-          </Link>
-          <Link to="/scan/new" className="px-6 py-3 border border-border text-gray-300 hover:text-white hover:bg-white/5 font-bold rounded-xl flex items-center gap-2 transition-all">
-            <Search size={18} />
-            Start New Scan
-          </Link>
-          <Link to="/dashboard" className="px-6 py-3 border border-border text-gray-300 hover:text-white hover:bg-white/5 font-bold rounded-xl flex items-center gap-2 transition-all">
-            <LayoutDashboard size={18} />
-            Back to Dashboard
-          </Link>
         </div>
       </div>
 
-      {/* Results Section */}
+      {/* Vulnerabilities List */}
       <div className="space-y-12">
-        {scan.vulnerabilities?.length > 0 ? (
+        {(scan.vulnerabilities || []).length > 0 ? (
           ['critical', 'high', 'medium', 'low'].map(severity => {
-            const vulns = groupedVulns[severity];
-            if (!vulns) return null;
+            const items = (scan.vulnerabilities || []).filter(v => v.severity === severity);
+            if (items.length === 0) return null;
 
-            const severityStyles = {
-              critical: { badge: 'bg-red-500', text: 'text-red-500', border: 'border-red-500/20' },
-              high: { badge: 'bg-orange-500', text: 'text-orange-500', border: 'border-orange-500/20' },
-              medium: { badge: 'bg-yellow-500', text: 'text-yellow-500', border: 'border-yellow-500/20' },
-              low: { badge: 'bg-blue-500', text: 'text-blue-500', border: 'border-blue-500/20' }
-            };
+            const sevColor = severity === 'critical' ? 'text-red-500' : severity === 'high' ? 'text-orange-500' : severity === 'medium' ? 'text-yellow-500' : 'text-blue-500';
+            const sevBg = severity === 'critical' ? 'bg-red-500/10' : severity === 'high' ? 'bg-orange-500/10' : severity === 'medium' ? 'bg-yellow-500/10' : 'bg-blue-500/10';
+            const sevBorder = severity === 'critical' ? 'border-red-500/20' : severity === 'high' ? 'border-orange-500/20' : severity === 'medium' ? 'border-yellow-500/20' : 'border-blue-500/20';
 
             return (
               <div key={severity} className="space-y-6">
                 <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-md text-black font-black text-[10px] uppercase tracking-wider ${severityStyles[severity].badge}`}>
-                    {severity}
-                  </span>
-                  <span className="text-gray-500 font-bold">{vulns.length} Issues Detected</span>
-                  <div className="h-px bg-border flex-1"></div>
+                  <div className={`px-4 py-1.5 rounded-full ${sevBg} ${sevBorder} border ${sevColor} text-xs font-black uppercase tracking-[0.2em]`}>
+                    {severity} ({items.length})
+                  </div>
+                  <div className="h-px flex-1 bg-border"></div>
                 </div>
 
                 <div className="grid gap-6">
-                  {vulns.map((v, i) => (
-                    <div key={i} className={`bg-card border ${severityStyles[severity].border} rounded-2xl p-6 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all group`}>
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="space-y-1">
-                          <h3 className="text-xl font-bold group-hover:text-white transition-colors capitalize">
-                            {(v.vuln_type || 'Unknown').replace(/_/g, ' ')}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-4">
-                           <div className="text-right">
-                              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter mb-1">Confidence Score</div>
-                              <div className="w-24 h-1.5 bg-background border border-border rounded-full overflow-hidden">
-                                <div className={`h-full ${severityStyles[severity].badge}`} style={{ width: `${v.confidence_score * 100}%` }}></div>
-                              </div>
-                              <div className="text-[10px] font-bold text-gray-400 mt-1">{(v.confidence_score * 100).toFixed(0)}%</div>
-                           </div>
-                        </div>
-                      </div>
-
-                      <p className="text-gray-400 mb-6 leading-relaxed max-w-4xl">{v.description}</p>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                            <Globe size={10} /> Impacted URL
+                  {items.map((vuln, i) => (
+                    <div key={i} className="glass p-8 rounded-3xl border-white/5 group hover:border-primary/20 transition-all relative overflow-hidden">
+                      <div className="flex flex-col lg:flex-row justify-between gap-8">
+                        <div className="flex-1 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-xl font-bold">{vuln.vuln_type}</h3>
+                            <span className="lg:hidden text-xs font-bold text-gray-500">CONFIDENCE: {vuln.confidence_score}%</span>
                           </div>
-                          <div className="bg-background border border-border p-3 rounded-lg font-mono text-sm text-primary/80 overflow-x-auto">
-                            {v.url}
+                          <p className="text-gray-400 text-sm leading-relaxed max-w-3xl">{vuln.description}</p>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                              <Globe className="w-3 h-3" /> Affected URL
+                            </div>
+                            <div className="bg-background/80 p-3 rounded-xl border border-border  text-xs break-all text-primary/80">
+                              {vuln.url}
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                              <Code className="w-3 h-3" /> Technical Evidence
+                            </div>
+                            <div className="bg-black/50 p-4 rounded-xl border border-border  text-xs text-blue-300">
+                              {vuln.evidence}
+                            </div>
                           </div>
                         </div>
 
-                        {v.evidence && (
+                        <div className="lg:w-48 lg:border-l border-border lg:pl-8 space-y-6 flex flex-col justify-center">
                           <div className="space-y-2">
-                             <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                              <Info size={10} /> Evidence
-                            </div>
-                            <div className="bg-background/80 border border-border p-4 rounded-xl font-mono text-xs text-blue-400/90 whitespace-pre-wrap">
-                              {v.evidence}
-                            </div>
+                             <div className="flex justify-between text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                               <span>Confidence</span>
+                               <span>{vuln.confidence_score}%</span>
+                             </div>
+                             <div className="h-1.5 bg-background rounded-full overflow-hidden border border-border">
+                               <div className={`h-full ${sevColor.replace('text', 'bg')} w-[${vuln.confidence_score}%]`} style={{ width: `${vuln.confidence_score}%` }} />
+                             </div>
                           </div>
-                        )}
+                          <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest opacity-50">
+                            <Info className="w-4 h-4" /> OWASP A0{i+1}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -180,12 +161,12 @@ const ScanResults = () => {
             );
           })
         ) : (
-          <div className="py-24 flex flex-col items-center justify-center text-center">
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-[0_0_40px_rgba(0,255,136,0.1)]">
-              <CheckCircle2 size={48} />
+          <div className="glass p-20 rounded-3xl border-white/5 text-center">
+            <div className="w-20 h-20 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
+              <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-3xl font-bold mb-2">No Vulnerabilities Found!</h2>
-            <p className="text-gray-500 max-w-md">Your target appears to be secure based on our current security definitions and AI logic. Keep up the good work!</p>
+            <h2 className="text-3xl font-bold mb-4">No vulnerabilities found!</h2>
+            <p className="text-gray-500 text-lg max-w-md mx-auto">Our security assessment did not detect any known vulnerabilities. The target appears to be following security best practices.</p>
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, register as apiRegister, getMe } from '../services/api';
+import { getMe, login as apiLogin, register as apiRegister } from '../services/api';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
         } catch (error) {
           localStorage.removeItem('token');
-          setUser(null);
         }
       }
       setLoading(false);
@@ -25,15 +24,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    try {
-      const data = await apiLogin(email, password);
-      localStorage.setItem('token', data.access_token);
-      const userData = await getMe();
-      setUser(userData);
-      return userData;
-    } catch (error) {
-      throw error;
-    }
+    const data = await apiLogin(email, password);
+    localStorage.setItem('token', data.access_token);
+    const userData = await getMe();
+    setUser(userData);
   };
 
   const logout = () => {
@@ -42,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, email, password) => {
-    return await apiRegister(username, email, password);
+    await apiRegister(username, email, password);
   };
 
   return (
@@ -52,10 +46,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
