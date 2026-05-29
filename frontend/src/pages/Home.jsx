@@ -207,7 +207,6 @@ const Home = () => {
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={threatData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
                     <XAxis 
                       dataKey="name" 
                       axisLine={false} 
