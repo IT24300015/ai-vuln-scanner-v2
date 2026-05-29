@@ -1,8 +1,7 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Brain, Zap, ArrowRight, CheckCircle, Mail, Phone, MapPin, Globe, Lock, Cpu, Database } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
+import { Shield, Brain, Zap, ArrowRight, Mail, Phone, MapPin, Globe, Lock, Cpu, Database } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
 
 const threatData = [

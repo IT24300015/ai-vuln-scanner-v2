@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.models import User, Scan, Vulnerability, Report
-from app.api.schemas import ScanCreate, ScanResponse, VulnerabilityResponse
+from app.api.schemas import ScanCreate, ScanResponse
 from app.services.scan_service import scan_service
 from typing import List
 
@@ -60,7 +60,27 @@ def get_my_scans(
     scans = db.query(Scan).filter(
         Scan.user_id == current_user.id
     ).order_by(Scan.created_at.desc()).all()
-    return scans
+    return [
+        {
+            "id": scan.id,
+            "target_url": scan.target_url,
+            "status": scan.status,
+            "created_at": scan.created_at,
+            "vulnerabilities": [
+                {
+                    "id": vulnerability.id,
+                    "vuln_type": vulnerability.vuln_type,
+                    "severity": vulnerability.severity,
+                    "url": vulnerability.url,
+                    "description": vulnerability.description,
+                    "confidence_score": vulnerability.confidence_score,
+                    "evidence": vulnerability.evidence,
+                }
+                for vulnerability in scan.vulnerabilities
+            ],
+        }
+        for scan in scans
+    ]
 
 
 # ─── GET SCAN BY ID ───────────────────────────────────────

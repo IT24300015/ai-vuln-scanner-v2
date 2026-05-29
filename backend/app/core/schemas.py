@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import List, Optional
 from datetime import datetime
 
 class UserRegister(BaseModel):
@@ -28,15 +28,6 @@ class Token(BaseModel):
 class ScanCreate(BaseModel):
     target_url: str
 
-class ScanResponse(BaseModel):
-    id: int
-    target_url: str
-    status: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
 class VulnerabilityResponse(BaseModel):
     id: int
     vuln_type: str
@@ -45,6 +36,17 @@ class VulnerabilityResponse(BaseModel):
     description: Optional[str]
     confidence_score: float
     evidence: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class ScanResponse(BaseModel):
+    id: int
+    target_url: str
+    status: str
+    created_at: datetime
+    vulnerabilities: List[VulnerabilityResponse] = []
 
     class Config:
         from_attributes = True
