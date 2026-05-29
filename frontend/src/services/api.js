@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Prefer an explicit env override, otherwise use the backend default exposed by docker-compose.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+const BASE_URL = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 const api = axios.create({
   baseURL: BASE_URL,
