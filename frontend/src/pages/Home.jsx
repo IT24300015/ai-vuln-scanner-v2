@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Shield, Brain, Zap, ArrowRight, Mail, Phone, MapPin, Globe, Lock, Cpu, Database } from 'lucide-react';
 import {
-  BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
 
 const threatData = [
